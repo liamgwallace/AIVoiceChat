@@ -1,4 +1,4 @@
-from ChatAI import ChatAI
+from ChatAI import ai_agent
 from GUI import AssistantGUI
 import ai_personas
 import elevenlabs_voices
@@ -11,7 +11,15 @@ import queue
 import time
 import string
 
-elevenlabs_api_key = '4f6508be147a0eb2794a356342ba0d8c'
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL')
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+ELEVENLABS_MODEL = os.getenv('ELEVENLABS_MODEL')
+ELEVENLABS_VOICE = elevenlabs_voices.glados
 
 class WakeWordHandler:
     def __init__(self):
@@ -90,17 +98,15 @@ def listen_user_input(wake_word_handler, recorder, elevenlabs, chat_agent, gui):
         elevenlabs.stream(
             elevenlabs.generate(
                 text=agent_response2,
-                voice=elevenlabs_voices.glados,
-                model="eleven_turbo_v2",
+                voice=ELEVENLABS_VOICE,
+                model=ELEVENLABS_MODEL,
                 stream=True,
             )
         )
-
-
         chat_agent.history_append(chat_agent.response)
 
 def main():
-    chat_agent = ChatAI()
+    chat_agent = ai_agent(api_key=OPENAI_API_KEY, model=OPENAI_MODEL)
     chat_agent.set_system_message(ai_personas.glados)
 
     wake_word_handler = WakeWordHandler()
@@ -128,7 +134,7 @@ def main():
     )
 
     # Create the voice stream and background thread for listening to user input
-    elevenlabs.set_api_key(elevenlabs_api_key)
+    elevenlabs.set_api_key(ELEVENLABS_API_KEY)
 
     input_thread = threading.Thread(target=listen_user_input, args=(wake_word_handler, recorder, elevenlabs, chat_agent, gui))
     input_thread.start()

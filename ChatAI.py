@@ -1,8 +1,16 @@
-# chat_ai.py
+
 from openai import OpenAI
-class ChatAI:
-    def __init__(self, api_key="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"):
+import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL')
+class ai_agent:
+    def __init__(self, api_key=OPENAI_API_KEY, model=OPENAI_MODEL):
         self.api_key = api_key
+        self.model = model
         self.client = OpenAI(api_key=self.api_key)
         self.history = []
         self.response = ""
@@ -18,7 +26,7 @@ class ChatAI:
         else:
             history_to_use.extend(self.history)
         response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo-1106",
+                model=self.model,
                 messages=history_to_use,
                 stream=stream)
         if stream:
@@ -42,17 +50,18 @@ class ChatAI:
 
 
 def main():
-    chat_ai = ChatAI()
+    chat_ai = ai_agent()
     chat_ai.set_system_message("Help the user. Only answer in one sentence.")
 
     while True:
         # Example usage
         user_query = input("input: ")
         print("AI: ", end='', flush=True)
-        for response_chunk in chat_ai.generate_response(user_query):
+        for response_chunk in chat_ai.generate_response(user_query, stream=True):
             print(response_chunk, end='', flush=True)
         print()
         chat_ai.history_append(chat_ai.response)
+        print(f"chat history:\n{chat_ai.history}\n")
 
 if __name__ == '__main__':
     main()
